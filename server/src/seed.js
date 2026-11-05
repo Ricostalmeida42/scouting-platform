@@ -14,6 +14,36 @@ import User from './models/User.js';
 // (Definições → Gestor de contas, ou src/apagarUtilizador.js).
 const DEMO = { username: 'demo', password: 'demo1234', papel: 'editor', nome: 'Scout' };
 
+// Avaliações de demonstração, uma por jogador. As notas das 4 dimensões estão na
+// escala 1-5 (nível de liga) e geram o rating; o veredito acompanha o rating, para
+// a base de exemplo ser coerente em vez de aleatória.
+//   t = técnica · ta = tática · f = física · m = mental
+const PERFIS_DEMO = {
+  'Rafael Monteiro Dias':     { t:3, ta:3, f:3, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027 },
+  'Tomás Vieira Lopes':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:4, contrato:2027 },
+  'Diogo Fonseca Ramos':      { t:2, ta:3, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'fisico',  imed:2, mp:2, lp:2, contrato:2026 },
+  'Miguel Antunes Rocha':     { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:4, lp:4, contrato:2028 },
+  'André Carvalho Pires':     { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2028 },
+  'Gonçalo Teixeira Nunes':   { t:3, ta:2, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'misto',   imed:2, mp:2, lp:2, contrato:2026 },
+  'Rúben Cardoso Faria':      { t:4, ta:4, f:3, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2027 },
+  'Nuno Ferreira Lima':       { t:3, ta:3, f:3, m:4, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027 },
+  'Hélder Barbosa Melo':      { t:5, ta:4, f:4, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:5, lp:5, contrato:2027 },
+  'Francisco Nogueira Pinto': { t:5, ta:4, f:4, m:4, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:4, lp:5, contrato:2028 },
+  'João Resende Matos':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:3, contrato:2026 },
+  'Pedro Alves Marques':      { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:4, lp:4, contrato:2027 },
+  'Daniel Sousa Branco':      { t:4, ta:4, f:5, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'misto',   imed:4, mp:5, lp:5, contrato:2028 },
+  'Vasco Correia Leal':       { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:5, contrato:2029 },
+};
+
+// Jogos de onde saem as observações de exemplo.
+const JOGOS = [
+  { dias: 38, competicao: 'Liga 3',                  adversario: 'SC Covilhã' },
+  { dias: 24, competicao: 'Campeonato de Portugal',  adversario: 'Anadia FC' },
+  { dias: 11, competicao: 'Juniores A (Sub-19)',     adversario: 'FC Porto B' },
+];
+
+const haDias = (n) => new Date(Date.now() - n * 86400000);
+
 // Jogadores de exemplo (fictícios) para arrancar a base com dados de demonstração.
 const jogadores = [
   { nomeCompleto: 'Rafael Monteiro Dias', posicaoPrincipal: 'GR', dataNascimento: new Date('2005-02-11'), clubeAtual: 'Leixões SC', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
@@ -45,8 +75,44 @@ async function run() {
     Agendamento.deleteMany({}),
   ]);
 
-  for (const j of jogadores) {
-    await new Player(j).save(); // save() para disparar hooks
+  // Jogadores + uma observação cada, para a base abrir com ratings e vereditos
+  // calculados em vez de colunas vazias.
+  let nObs = 0;
+  for (const [i, j] of jogadores.entries()) {
+    const p = await new Player(j).save(); // save() para disparar hooks
+
+    const d = PERFIS_DEMO[j.nomeCompleto];
+    if (!d) continue;
+
+    const jogo = JOGOS[i % JOGOS.length];
+    const obs = new Observation({
+      jogador: p._id,
+      dataJogo: haDias(jogo.dias),
+      competicao: jogo.competicao,
+      adversario: jogo.adversario,
+      minutos: 90,
+      posicaoJogo: j.posicaoPrincipal,
+      titular: true,
+      avaliacao: { tecnica: d.t, tatica: d.ta, fisica: d.f, mental: d.m },
+      veredito: d.veredito,
+      rendimento: d.rend,
+      potencialClass: d.pot,
+    });
+    await obs.save(); // o pre-save calcula o rating a partir da avaliação
+    nObs += 1;
+
+    // Espelha no jogador o que a rota /api/observations faria a seguir.
+    p.avaliacao = { tecnica: d.t, tatica: d.ta, fisica: d.f, mental: d.m };
+    p.ratingFinal = obs.rating;
+    p.veredito = d.veredito;
+    p.rendimento = d.rend;
+    p.potencialClass = d.pot; // o pre-save limpa-o acima da idade máxima
+    p.perfil = d.perfil;
+    p.avaliacaoImediata = d.imed;
+    p.avaliacaoMedioPrazo = d.mp;
+    p.avaliacaoLongoPrazo = d.lp;
+    p.fimContrato = d.contrato;
+    await p.save();
   }
 
   // Conta de demonstração (não mexe nas restantes contas que existam).
@@ -59,7 +125,9 @@ async function run() {
   await u.definirPassword(DEMO.password);
   await u.save();
 
-  console.log(`[seed] Base limpa. ${jogadores.length} jogadores de exemplo inseridos.`);
+  console.log(
+    `[seed] Base limpa. ${jogadores.length} jogadores e ${nObs} observações de exemplo inseridos.`
+  );
   console.log(
     `[seed] Conta de demonstração ${nova ? 'criada' : 'atualizada'}: ` +
       `${DEMO.username} / ${DEMO.password} (${DEMO.papel}). Apaga-a antes de usar a sério.`
