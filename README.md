@@ -1,99 +1,102 @@
-# Plataforma de Scouting
+# Scouting Platform
 
-Aplicação web local (MERN) para gerir o departamento de scouting de um clube de futebol:
-base de dados de jogadores, observações, avaliação por grelha, recrutamento (11-sombra),
-planeamento do plantel, agenda/competições e relatórios imprimíveis. Substitui a folha de
-Excel; todos os dados são introduzidos manualmente pelo utilizador.
+A local web application (MERN) for running a football club's scouting department: player
+database, match observations, attribute-grid evaluation, recruitment with a shadow team,
+squad planning, fixtures and competitions, and printable reports. It replaces the
+spreadsheet; all data is entered manually by the user.
 
-> O nome do clube é **configurável** (ver *Configuração*): esta é uma plataforma genérica,
-> reutilizável por qualquer clube.
+> The club name is **configurable** (see *Configuration*): this is a generic platform,
+> reusable by any club.
 
 ## Stack
-- **MongoDB** 8.x (local, `localhost:27017`, base `scouting`)
-- **Express** + **Mongoose** (API REST — pasta `server/`)
-- **React** + **Vite** + **React Router** (interface — pasta `client/`)
-- Interface em português.
+- **MongoDB** 8.x (local, `localhost:27017`, database `scouting`)
+- **Express** + **Mongoose** (REST API, `server/` folder)
+- **React** + **Vite** + **React Router** (interface, `client/` folder)
+- Interface and code are in Portuguese.
 
-## Pré-requisitos
-- Node.js 18+ (testado com v24)
-- MongoDB a correr localmente na porta 27017
+## Requirements
+- Node.js 18+ (tested on v24)
+- MongoDB running locally on port 27017
 
-## Instalação (primeira vez)
+## Install (first time)
 ```bash
-npm run install:all          # raiz + server + client
-cp server/.env.example server/.env   # e edita os valores (ver Configuração)
-cp client/.env.example client/.env   # opcional (nome do clube na interface)
-npm run seed                 # opcional: popula a base com jogadores de exemplo
+npm run install:all                  # root + server + client
+cp server/.env.example server/.env   # then edit the values (see Configuration)
+cp client/.env.example client/.env   # optional (club name shown in the interface)
+npm run seed                         # optional: fills the database with example players
 ```
 
-## Uso diário
-No Windows, **duplo clique em `Scouting.bat`** — constrói a interface na primeira vez,
-arranca o servidor e abre o navegador. Para fechar, fecha a janela.
+## Daily use
+On Windows, **double-click `Scouting.bat`**. It builds the interface the first time,
+starts the server and opens the browser. Close the window to stop it.
 
-Equivalente por linha de comandos:
+Command line equivalent:
 ```bash
-npm run build   # só depois de alterar código do cliente
-npm start       # arranca em http://localhost:4000
+npm run build   # only after changing client code
+npm start       # runs on http://localhost:4000
 ```
-Em produção o servidor serve a interface e a API **na mesma porta** (um só processo).
+In production the server serves both the interface and the API **on the same port**, as a
+single process.
 
-## Desenvolvimento
+## Development
 ```bash
-npm run dev   # API (:4000) + Vite com recarregamento automático (:5173)
+npm run dev   # API (:4000) + Vite with hot reload (:5173)
 ```
-Em desenvolvimento usa-se **http://localhost:5173** (o Vite faz proxy de `/api` para a API).
+In development use **http://localhost:5173** (Vite proxies `/api` to the API).
 
-## Configuração
+## Configuration
 
-`server/.env` (ver `server/.env.example`):
+`server/.env` (see `server/.env.example`):
 ```
 PORT=4000
 MONGODB_URI=mongodb://127.0.0.1:27017/scouting
 CLIENT_ORIGIN=http://localhost:5173
-JWT_SECRET=<segredo aleatório para assinar as sessões>
+JWT_SECRET=<random secret used to sign sessions>
 JWT_EXPIRA=7d
-IMPORT_API_KEY=<chave para integrações externas>
-CLUBE_PROPRIO=FC Exemplo          # nome do clube próprio (deteção nas classificações/calendário)
+IMPORT_API_KEY=<key for external integrations>
+CLUBE_PROPRIO=FC Exemplo          # your own club, detected in standings and fixtures
 ```
 
-`client/.env` (ver `client/.env.example`):
+`client/.env` (see `client/.env.example`):
 ```
-VITE_CLUBE=FC Exemplo             # nome do clube mostrado na interface (barra lateral e login)
+VITE_CLUBE=FC Exemplo             # club name shown in the interface (sidebar and login)
 ```
 
-O **clube próprio** é usado em dois sítios funcionais: para se destacar nas tabelas de
-classificação e no calendário (não é um alvo de scouting), e para o título da interface.
-Define o mesmo nome em `CLUBE_PROPRIO` e `VITE_CLUBE`.
+Your own club is used in two functional places: to highlight it in standings and fixtures,
+where it is not a scouting target, and for the interface title. Set the same name in
+`CLUBE_PROPRIO` and `VITE_CLUBE`.
 
-## Contas e acesso
-Toda a plataforma está protegida por início de sessão. Papéis:
-- **editor** — scouting: acesso total (lê e altera tudo).
-- **viewer** — consulta; qualquer alteração é bloqueada no servidor (exceto sugestões).
-- **tecnico** — equipa técnica: subconjunto de acesso; o acesso por página é configurável por conta.
+## Accounts and access
+The whole platform sits behind a login. Roles:
+- **editor** (scouting): full access, reads and changes everything.
+- **viewer**: read only; any change is blocked on the server, except suggestions.
+- **tecnico** (coaching staff): a subset of access; page-level access is configurable per account.
 
-Criar/atualizar contas (a palavra-passe fica sempre encriptada):
+Create or update accounts (passwords are always stored encrypted):
 ```bash
 cd server
-node src/criarUtilizador.js <username> <password> <editor|viewer|tecnico> "Nome a mostrar"
+node src/criarUtilizador.js <username> <password> <editor|viewer|tecnico> "Display name"
 ```
-Dentro da aplicação, um editor gere contas e acessos em **Definições → Gestor de contas**.
+Inside the application, an editor manages accounts and access in **Definições → Gestor de
+contas**.
 
-> **Integrações externas** sem sessão enviam a `IMPORT_API_KEY` no cabeçalho `x-scouting-key`
-> e agem como editor. Em produção (atrás de HTTPS), define `NODE_ENV=production` para o cookie
-> de sessão só viajar encriptado.
+> **External integrations** without a session send `IMPORT_API_KEY` in the `x-scouting-key`
+> header and act as editor. In production, behind HTTPS, set `NODE_ENV=production` so the
+> session cookie only travels encrypted.
 
-## Módulos
-1. **Base de dados** — jogadores, filtros e pesquisa; ficha com bio, classificação e histórico de observações.
-2. **Observações** — registo de jogos com avaliação por grelha de atributos (posição-específica); o rating do jogador é a média das observações.
-3. **Recrutamento** — 11-sombra (shadow team), lista por posição e comparação; relatório de mercado imprimível.
-4. **Planeamento** — plantel e estrutura por posição (esta época / próxima época).
-5. **Agenda & Competições** — plano semanal, jogos vistos, calendário e classificações.
-6. **Ligas & Clubes / Contactos** — catálogo de ligas/clubes e contactos de agentes.
-7. **Home** — KPIs e cobertura por posição.
+## Modules
+1. **Database**: players, filters and search; profile with bio, classification and observation history.
+2. **Observations**: match records evaluated on a position-specific attribute grid; a player's rating is the mean of his observations.
+3. **Recruitment**: shadow team, per-position lists and comparison; printable market report.
+4. **Planning**: squad and structure by position, for the current season and the next.
+5. **Schedule and competitions**: weekly plan, matches watched, fixtures and standings.
+6. **Leagues, clubs and contacts**: catalogue of leagues and clubs, and agent contacts.
+7. **Home**: KPIs and coverage by position.
 
-## Avaliação
-Cada observação é avaliada numa grelha de atributos por posição; as dimensões (Técnica,
-Tática, Física, Mental) geram um **rating ponderado (1–5, nível de liga)** calculado
-automaticamente (`server/src/constants.js` → `calcularRatingFinal`). O jogador tem ainda
-uma classificação de perfil: **Rendimento**, **Potencial**, **Perfil** e um **Veredito**
-(decisão de recrutamento).
+## Evaluation
+Each observation is scored on a position-specific attribute grid. The four dimensions
+(Technical, Tactical, Physical, Mental) produce a weighted rating on a **1 to 5 league
+level scale**, calculated automatically in `server/src/constants.js` →
+`calcularRatingFinal`. Each player also carries a profile classification: **Rendimento**
+(current level), **Potencial** (projected ceiling), **Perfil**, and a **Veredito**
+(recruitment decision).
