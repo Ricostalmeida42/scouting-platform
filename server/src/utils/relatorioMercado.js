@@ -11,6 +11,7 @@ import {
   RENDIMENTO_LABEL,
   POTENCIAL_LABEL,
   PERFIL_LABEL,
+  CLUBE_PROPRIO,
 } from '../constants.js';
 
 const esc = (s) =>
@@ -135,7 +136,7 @@ export function gerarRelatorioMercado({ jogadores = [], obsPorJogador = {}, gera
 
   return `<!doctype html>
 <html lang="pt"><head><meta charset="utf-8">
-<title>Relatório de mercado — FC Exemplo</title>
+<title>Relatório de mercado — ${CLUBE_PROPRIO}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
@@ -207,7 +208,7 @@ export function gerarRelatorioMercado({ jogadores = [], obsPorJogador = {}, gera
       ${escudo ? `<img src="${escudo}" alt="">` : ''}
       <div>
         <h1>Relatório de mercado</h1>
-        <div class="topo-sub">FC Exemplo · Scouting · Alvos por posição</div>
+        <div class="topo-sub">${CLUBE_PROPRIO} · Scouting · Alvos por posição</div>
       </div>
       <div class="topo-dir"><b>${dataPT(geradoEm)}</b>Confidencial</div>
     </div>
@@ -219,7 +220,7 @@ export function gerarRelatorioMercado({ jogadores = [], obsPorJogador = {}, gera
       <span class="legenda">Nível projetado 1 Distrital · 2 CP baixo · 3 Nível do clube · 4 Liga 3 · 5 Profissionais (Imediato · Médio · Longo prazo)</span>
     </div>
     ${corpo}
-    <div class="rodape">Gerado pela plataforma de scouting da FC Exemplo · Informação financeira e contratual estimada, a confirmar · Confidencial</div>
+    <div class="rodape">Gerado pela plataforma de scouting do ${CLUBE_PROPRIO} · Informação financeira e contratual estimada, a confirmar · Confidencial</div>
   </div>
 </body></html>`;
 }

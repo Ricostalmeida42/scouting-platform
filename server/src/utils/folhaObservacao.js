@@ -6,6 +6,7 @@
 // pela linguagem do modelo de jogo (momentos) para a passagem a relatório ser
 // direta: contexto → registo ao vivo → estilo por momentos → técnica/física/mental.
 import { escudoDataUrl } from './relatorioRca.js';
+import { CLUBE_PROPRIO } from '../constants.js';
 
 const esc = (s) =>
   String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -208,7 +209,7 @@ export function gerarFolhaObservacao(jogador = null, jogo = null) {
       ${escudo ? `<img src="${escudo}" alt="">` : ''}
       <div>
         <h1>Folha de Observação</h1>
-        <div class="topo-sub">FC Exemplo · Departamento de Scouting</div>
+        <div class="topo-sub">${CLUBE_PROPRIO} · Departamento de Scouting</div>
       </div>
       <div class="topo-dir"><b>Notas de jogo</b></div>
     </header>
@@ -265,7 +266,7 @@ export function gerarFolhaObservacao(jogador = null, jogo = null) {
     </div>
 
     <footer class="rodape">
-      <span>FC Exemplo · Scouting</span>
+      <span>${CLUBE_PROPRIO} · Scouting</span>
       <span>Notas do jogo</span>
     </footer>
   </div>

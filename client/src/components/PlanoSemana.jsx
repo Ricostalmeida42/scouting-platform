@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { api } from '../api.js';
 import Modal from './Modal.jsx';
 import { useToast } from './Toasts.jsx';
-import { dataCurta } from '../lib.js';
+import { dataCurta, CLUBE_PROPRIO } from '../lib.js';
 import { chaveDia } from './VistaSemana.jsx';
 
 const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -353,11 +353,11 @@ export default function PlanoSemana({ ags, obsPorJogo, aoRecarregar, podeEditar 
 </div>
 <div class="folha">
   <header class="topo">
-    <div class="sub">FC Exemplo · Departamento de Scouting</div>
+    <div class="sub">${CLUBE_PROPRIO} · Departamento de Scouting</div>
     <h1>Plano de Observação — Semana ${dataCurta(base)} a ${dataCurta(dias[6])}</h1>
   </header>
   ${corpo ? tabela : '<p class="vazio">Sem jogos agendados nesta semana.</p>'}
-  <footer><span>FC Exemplo · Scouting</span><span>Plano da semana</span></footer>
+  <footer><span>${CLUBE_PROPRIO} · Scouting</span><span>Plano da semana</span></footer>
 </div>
 </body></html>`;
 

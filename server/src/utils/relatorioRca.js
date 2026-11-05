@@ -13,6 +13,7 @@ import {
   PERFIL_LABEL,
   AVALIACAO_NIVEL_LABEL,
   IDADE_MAX_POTENCIAL,
+  CLUBE_PROPRIO,
 } from '../constants.js';
 
 const PASTA_TEMPLATES = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../templates');
@@ -272,7 +273,7 @@ export function gerarRelatorioRca(dados = {}) {
   <div class="a4-marca noprint" aria-hidden="true"><small>↑ cabe numa página A4</small><span>fim da página A4</span></div>
   <header class="topo">
     ${escudo ? `<img class="escudo" src="${escudo}" alt="">` : ''}
-    <div class="topo-txt"><div class="clube">FC Exemplo</div><div class="tipo">Relatório de Scouting</div></div>
+    <div class="topo-txt"><div class="clube">${CLUBE_PROPRIO}</div><div class="tipo">Relatório de Scouting</div></div>
     <div class="data">${new Date().toLocaleDateString('pt-PT')}</div>
   </header>
 

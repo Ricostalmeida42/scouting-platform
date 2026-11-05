@@ -1,7 +1,7 @@
 // Página HTML imprimível do sumário semanal (Relatório Semanal de Scouting).
 // Segue a mesma lógica do relatório do jogador: o utilizador abre a página e
 // usa "Guardar PDF / Imprimir" do browser — sem biblioteca de PDF no servidor.
-import { POSICOES } from '../constants.js';
+import { POSICOES, CLUBE_PROPRIO } from '../constants.js';
 
 const POS = Object.fromEntries(POSICOES.map((p) => [p.key, p.curto || p.key]));
 const pos = (k) => POS[k] || k || '—';
@@ -68,7 +68,7 @@ export function sumarioSemanalHtml(s, escudo) {
 
   return `<!doctype html>
 <html lang="pt"><head><meta charset="utf-8">
-<title>Relatório Semanal de Scouting — FC Exemplo</title>
+<title>Relatório Semanal de Scouting — ${CLUBE_PROPRIO}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -106,8 +106,8 @@ export function sumarioSemanalHtml(s, escudo) {
   <div class="toolbar"><button onclick="window.print()">🖨 Guardar PDF / Imprimir</button></div>
   <div class="page">
     <div class="topo">
-      ${escudo ? `<img src="${escudo}" alt="FC Exemplo">` : ''}
-      <div><div class="clube">FC Exemplo</div><div class="dep">Departamento de Scouting</div></div>
+      ${escudo ? `<img src="${escudo}" alt="${CLUBE_PROPRIO}">` : ''}
+      <div><div class="clube">${CLUBE_PROPRIO}</div><div class="dep">Departamento de Scouting</div></div>
       <div class="dir"><div class="tit">Relatório Semanal</div>
       <div class="per">${dataLonga(s.periodo.de)} a ${dataLonga(s.periodo.a)}</div></div>
     </div>
@@ -119,7 +119,7 @@ export function sumarioSemanalHtml(s, escudo) {
     ${seccao('Observados', `${s.totais.observacoes} jogo(s)`, observados, 'Nenhum jogo observado esta semana.')}
     ${seccao('Novos alvos', s.totais.novosAlvos, novos, 'Nenhum alvo novo esta semana.')}
     ${seccao('Jogos a observar (próximos 7 dias)', s.totais.jogosProximos, jogos, 'Nenhum jogo agendado.')}
-    <div class="rodape"><span>FC Exemplo · Departamento de Scouting</span><span>Gerado em ${dataLonga(s.periodo.a)}</span></div>
+    <div class="rodape"><span>${CLUBE_PROPRIO} · Departamento de Scouting</span><span>Gerado em ${dataLonga(s.periodo.a)}</span></div>
   </div>
 </body></html>`;
 }

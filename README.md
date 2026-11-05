@@ -62,9 +62,10 @@ CLUBE_PROPRIO=FC Exemplo          # your own club, detected in standings and fix
 VITE_CLUBE=FC Exemplo             # club name shown in the interface (sidebar and login)
 ```
 
-Your own club is used in two functional places: to highlight it in standings and fixtures,
-where it is not a scouting target, and for the interface title. Set the same name in
-`CLUBE_PROPRIO` and `VITE_CLUBE`.
+Your own club is used in three places: the interface title and login screen, the detection
+that highlights it in standings and fixtures (where it is not a scouting target), and the
+header and footer of every printable report. Set the same name in `CLUBE_PROPRIO` and
+`VITE_CLUBE`: the server uses the first, the interface the second.
 
 ## Accounts and access
 The whole platform sits behind a login. Roles:
