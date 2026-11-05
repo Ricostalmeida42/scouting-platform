@@ -111,7 +111,7 @@ async function run() {
     p.avaliacaoImediata = d.imed;
     p.avaliacaoMedioPrazo = d.mp;
     p.avaliacaoLongoPrazo = d.lp;
-    p.fimContrato = d.contrato;
+    p.fimContrato = new Date(d.contrato, 5, 30); // 30 de junho do ano indicado
     await p.save();
   }
 
