@@ -8,6 +8,9 @@ import Contact from './models/Contact.js';
 import Club from './models/Club.js';
 import Agendamento from './models/Agendamento.js';
 import User from './models/User.js';
+// O catálogo de atributos por posição vive no cliente e não tem dependências,
+// por isso serve de fonte única também para o seed.
+import { GRELHA_PADRAO } from '../../client/src/grelhaPosicao.js';
 
 // Conta de demonstração, para a plataforma poder ser aberta logo após o seed.
 // Só para uso local: apaga-a ou troca a palavra-passe antes de usar a sério
@@ -19,30 +22,98 @@ const DEMO = { username: 'demo', password: 'demo1234', papel: 'editor', nome: 'S
 // a base de exemplo ser coerente em vez de aleatória.
 //   t = técnica · ta = tática · f = física · m = mental
 const PERFIS_DEMO = {
-  'Rafael Monteiro Dias':     { t:3, ta:3, f:3, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027 },
-  'Tomás Vieira Lopes':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:4, contrato:2027 },
-  'Diogo Fonseca Ramos':      { t:2, ta:3, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'fisico',  imed:2, mp:2, lp:2, contrato:2026 },
-  'Miguel Antunes Rocha':     { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:4, lp:4, contrato:2028 },
-  'André Carvalho Pires':     { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2028 },
-  'Gonçalo Teixeira Nunes':   { t:3, ta:2, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'misto',   imed:2, mp:2, lp:2, contrato:2026 },
-  'Rúben Cardoso Faria':      { t:4, ta:4, f:3, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2027 },
-  'Nuno Ferreira Lima':       { t:3, ta:3, f:3, m:4, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027 },
-  'Hélder Barbosa Melo':      { t:5, ta:4, f:4, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:5, lp:5, contrato:2027 },
-  'Francisco Nogueira Pinto': { t:5, ta:4, f:4, m:4, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:4, lp:5, contrato:2028 },
-  'João Resende Matos':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:3, contrato:2026 },
-  'Pedro Alves Marques':      { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:4, lp:4, contrato:2027 },
-  'Daniel Sousa Branco':      { t:4, ta:4, f:5, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'misto',   imed:4, mp:5, lp:5, contrato:2028 },
-  'Vasco Correia Leal':       { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:5, contrato:2029 },
+  'Rafael Monteiro Dias':     { t:3, ta:3, f:3, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027, shadow:'GR',
+    estilo:'Guarda-redes de linha, seguro no jogo aéreo. Participação na construção ainda por avaliar com bola pressionada.' },
+  'Tomás Vieira Lopes':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:4, contrato:2027, shadow:'DD',
+    estilo:'Lateral de ida e volta, forte no apoio ofensivo. Decisão no último terço inconsistente.' },
+  'Diogo Fonseca Ramos':      { t:2, ta:3, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'fisico',  imed:2, mp:2, lp:2, contrato:2026, shadow:null,
+    estilo:'Central de duelo, cumpre no corpo a corpo. Limitado na saída de bola para o modelo pretendido.' },
+  'Miguel Antunes Rocha':     { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:4, lp:4, contrato:2028, shadow:'DC',
+    estilo:'Central esquerdo com saída de bola em condução. Boa leitura antecipada; por vezes precipitado a sair da linha.' },
+  'André Carvalho Pires':     { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2028, shadow:'DE',
+    estilo:'Lateral esquerdo técnico, confortável a receber entre linhas. Deve crescer na fase defensiva.' },
+  'Gonçalo Teixeira Nunes':   { t:3, ta:2, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'misto',   imed:2, mp:2, lp:2, contrato:2026, shadow:null,
+    estilo:'Médio defensivo posicional. Ritmo de circulação abaixo do exigido; pouca margem pela idade.' },
+  'Rúben Cardoso Faria':      { t:4, ta:4, f:3, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2027, shadow:'MC',
+    estilo:'Médio de construção, bom primeiro passe e orientação de corpo. Intensidade sem bola a confirmar.' },
+  'Nuno Ferreira Lima':       { t:3, ta:3, f:3, m:4, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027, shadow:'MDF',
+    estilo:'Médio equilibrador, lê bem os espaços. Mais seguro em posse curta do que em transição.' },
+  'Hélder Barbosa Melo':      { t:5, ta:4, f:4, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:5, lp:5, contrato:2027, shadow:'MOF',
+    estilo:'Médio ofensivo criativo, decide bem sob pressão. O melhor da lista no último passe.' },
+  'Francisco Nogueira Pinto': { t:5, ta:4, f:4, m:4, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:4, lp:5, contrato:2028, shadow:'EE',
+    estilo:'Extremo esquerdo de 1x1, aceleração curta e remate de fora. Margem de evolução grande para a idade.' },
+  'João Resende Matos':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:3, contrato:2026, shadow:'ED',
+    estilo:'Extremo direito de profundidade. Eficaz em campo aberto, menos útil contra bloco baixo.' },
+  'Pedro Alves Marques':      { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:4, lp:4, contrato:2027, shadow:null,
+    estilo:'Ponta de lança de referência, protege bem a bola de costas. Alternativa ao perfil titular.' },
+  'Daniel Sousa Branco':      { t:4, ta:4, f:5, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'misto',   imed:4, mp:5, lp:5, contrato:2028, shadow:'PL',
+    estilo:'Avançado completo: ataca a profundidade e finaliza com os dois pés. Perfil mais pronto da lista.' },
+  'Vasco Correia Leal':       { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:5, contrato:2029, shadow:null,
+    estilo:'Extremo canhoto a jogar invertido. Muito jovem; seguir ao longo da época.' },
 };
 
 // Jogos de onde saem as observações de exemplo.
 const JOGOS = [
-  { dias: 38, competicao: 'Liga 3',                  adversario: 'SC Covilhã' },
-  { dias: 24, competicao: 'Campeonato de Portugal',  adversario: 'Anadia FC' },
-  { dias: 11, competicao: 'Juniores A (Sub-19)',     adversario: 'FC Porto B' },
+  { dias: 74, competicao: 'Liga 3',                 adversario: 'SC Covilhã' },
+  { dias: 52, competicao: 'Campeonato de Portugal', adversario: 'Anadia FC' },
+  { dias: 31, competicao: 'Juniores A (Sub-19)',    adversario: 'FC Porto B' },
+  { dias: 12, competicao: 'Liga Revelação',         adversario: 'Gil Vicente FC' },
 ];
 
 const haDias = (n) => new Date(Date.now() - n * 86400000);
+
+// Gerador determinístico: o seed produz sempre a mesma base, para a demonstração
+// ser reproduzível e as capturas de ecrã não mudarem a cada execução.
+function aleatorio(semente) {
+  let s = [...String(semente)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+}
+
+const limitar = (n) => Math.max(1, Math.min(5, Math.round(n)));
+
+// Preenche a grelha de atributos da posição à volta dos níveis-alvo de cada
+// dimensão, com variação pequena para as notas não saírem todas iguais.
+function gerarGrelha(pos, alvos, rnd) {
+  const grelha = {};
+  const dims = GRELHA_PADRAO[pos];
+  if (!dims) return grelha;
+  for (const [cat, attrs] of Object.entries(dims)) {
+    const alvo = alvos[cat];
+    if (alvo == null) continue;
+    for (const a of attrs) grelha[`${cat}.${a.k}`] = limitar(alvo + (rnd() * 1.6 - 0.8));
+  }
+  return grelha;
+}
+
+// Nota da dimensão = média ponderada dos atributos da grelha (igual ao que o
+// formulário de observação calcula no cliente).
+function notaDimensao(pos, cat, grelha) {
+  const attrs = (GRELHA_PADRAO[pos] || {})[cat] || [];
+  const notas = attrs
+    .map((a) => ({ p: a.p || 2, v: grelha[`${cat}.${a.k}`] }))
+    .filter((x) => typeof x.v === 'number');
+  if (!notas.length) return null;
+  const somaPesos = notas.reduce((s, x) => s + x.p, 0);
+  const total = notas.reduce((s, x) => s + x.v * x.p, 0);
+  return Math.round((total / somaPesos) * 10) / 10;
+}
+
+// Pontos fortes e a desenvolver saem dos próprios atributos melhor e pior
+// pontuados, para o texto não contradizer a grelha.
+function textoFortesFracos(pos, grelha) {
+  const rotulos = {};
+  for (const [cat, attrs] of Object.entries(GRELHA_PADRAO[pos] || {})) {
+    for (const a of attrs) rotulos[`${cat}.${a.k}`] = a.l;
+  }
+  const ordenados = Object.entries(grelha)
+    .filter(([k]) => rotulos[k])
+    .sort((a, b) => b[1] - a[1]);
+  const nomes = (lista) => lista.map(([k]) => rotulos[k].split(' / ')[0]).join(', ');
+  return {
+    fortes: nomes(ordenados.slice(0, 3)),
+    fracos: nomes(ordenados.slice(-2)),
+  };
+}
 
 // Jogadores de exemplo (fictícios) para arrancar a base com dados de demonstração.
 const jogadores = [
@@ -84,26 +155,62 @@ async function run() {
     const d = PERFIS_DEMO[j.nomeCompleto];
     if (!d) continue;
 
-    const jogo = JOGOS[i % JOGOS.length];
-    const obs = new Observation({
-      jogador: p._id,
-      dataJogo: haDias(jogo.dias),
-      competicao: jogo.competicao,
-      adversario: jogo.adversario,
-      minutos: 90,
-      posicaoJogo: j.posicaoPrincipal,
-      titular: true,
-      avaliacao: { tecnica: d.t, tatica: d.ta, fisica: d.f, mental: d.m },
-      veredito: d.veredito,
-      rendimento: d.rend,
-      potencialClass: d.pot,
-    });
-    await obs.save(); // o pre-save calcula o rating a partir da avaliação
-    nObs += 1;
+    const rnd = aleatorio(j.nomeCompleto);
+    const pos = j.posicaoPrincipal;
+    // Duas ou três observações por jogador, para a ficha ter histórico e o
+    // painel de consistência ter o que comparar.
+    const quantas = 2 + (i % 2);
+    const ratings = [];
+    let ultima = null;
+
+    for (let n = 0; n < quantas; n += 1) {
+      const jogo = JOGOS[(i + n) % JOGOS.length];
+      // A primeira observação é ligeiramente mais contida: o jogador ainda está
+      // a ser conhecido, e a avaliação converge com o número de jogos vistos.
+      const ajuste = n === 0 ? -0.4 : 0;
+      const alvos = {
+        tecnica: d.t + ajuste,
+        tatica: d.ta + ajuste,
+        fisica: d.f + ajuste,
+        mental: d.m + ajuste,
+      };
+      const grelha = gerarGrelha(pos, alvos, rnd);
+      const avaliacao = {
+        tecnica: notaDimensao(pos, 'tecnica', grelha),
+        tatica: notaDimensao(pos, 'tatica', grelha),
+        fisica: notaDimensao(pos, 'fisica', grelha),
+        mental: notaDimensao(pos, 'mental', grelha),
+      };
+      const { fortes, fracos } = textoFortesFracos(pos, grelha);
+      const ultimaDoJogador = n === quantas - 1;
+
+      const obs = new Observation({
+        jogador: p._id,
+        dataJogo: haDias(jogo.dias),
+        competicao: jogo.competicao,
+        adversario: jogo.adversario,
+        minutos: n === 0 ? 62 : 90,
+        posicaoJogo: pos,
+        titular: n !== 0,
+        avaliacao,
+        grelhaPosicao: grelha,
+        fortes,
+        fracos,
+        estiloJogo: d.estilo,
+        notas: `Observado frente ao ${jogo.adversario}. ${ultimaDoJogador ? 'Confirma a leitura das observações anteriores.' : 'Primeira observação; a confirmar em contexto diferente.'}`,
+        veredito: ultimaDoJogador ? d.veredito : 'Nova observação',
+        rendimento: d.rend,
+        potencialClass: d.pot,
+      });
+      await obs.save(); // o pre-save calcula o rating a partir da avaliação
+      nObs += 1;
+      ratings.push(obs.rating);
+      if (ultimaDoJogador) ultima = { avaliacao };
+    }
 
     // Espelha no jogador o que a rota /api/observations faria a seguir.
-    p.avaliacao = { tecnica: d.t, tatica: d.ta, fisica: d.f, mental: d.m };
-    p.ratingFinal = obs.rating;
+    p.avaliacao = ultima.avaliacao;
+    p.ratingFinal = Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10;
     p.veredito = d.veredito;
     p.rendimento = d.rend;
     p.potencialClass = d.pot; // o pre-save limpa-o acima da idade máxima
@@ -112,6 +219,9 @@ async function run() {
     p.avaliacaoMedioPrazo = d.mp;
     p.avaliacaoLongoPrazo = d.lp;
     p.fimContrato = new Date(d.contrato, 5, 30); // 30 de junho do ano indicado
+    // Onze-sombra: um alvo por posição. Quem não avança fica de fora, e os
+    // alternativas ficam sem casa atribuída, como aconteceria num clube.
+    p.shadowPos = d.shadow ? [d.shadow] : [];
     await p.save();
   }
 
