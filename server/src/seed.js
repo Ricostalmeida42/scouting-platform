@@ -17,40 +17,28 @@ import { GRELHA_PADRAO } from '../../client/src/grelhaPosicao.js';
 // (Definições → Gestor de contas, ou src/apagarUtilizador.js).
 const DEMO = { username: 'demo', password: 'demo1234', papel: 'editor', nome: 'Scout' };
 
-// Avaliações de demonstração, uma por jogador. As notas das 4 dimensões estão na
-// escala 1-5 (nível de liga) e geram o rating; o veredito acompanha o rating, para
-// a base de exemplo ser coerente em vez de aleatória.
-//   t = técnica · ta = tática · f = física · m = mental
-const PERFIS_DEMO = {
-  'Rafael Monteiro Dias':     { t:3, ta:3, f:3, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027, shadow:'GR',
-    estilo:'Guarda-redes de linha, seguro no jogo aéreo. Participação na construção ainda por avaliar com bola pressionada.' },
-  'Tomás Vieira Lopes':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:4, contrato:2027, shadow:'DD',
-    estilo:'Lateral de ida e volta, forte no apoio ofensivo. Decisão no último terço inconsistente.' },
-  'Diogo Fonseca Ramos':      { t:2, ta:3, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'fisico',  imed:2, mp:2, lp:2, contrato:2026, shadow:null,
-    estilo:'Central de duelo, cumpre no corpo a corpo. Limitado na saída de bola para o modelo pretendido.' },
-  'Miguel Antunes Rocha':     { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:4, lp:4, contrato:2028, shadow:'DC',
-    estilo:'Central esquerdo com saída de bola em condução. Boa leitura antecipada; por vezes precipitado a sair da linha.' },
-  'André Carvalho Pires':     { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2028, shadow:'DE',
-    estilo:'Lateral esquerdo técnico, confortável a receber entre linhas. Deve crescer na fase defensiva.' },
-  'Gonçalo Teixeira Nunes':   { t:3, ta:2, f:3, m:2, veredito:'Não avança',      rend:'R3', pot:'P3', perfil:'misto',   imed:2, mp:2, lp:2, contrato:2026, shadow:null,
-    estilo:'Médio defensivo posicional. Ritmo de circulação abaixo do exigido; pouca margem pela idade.' },
-  'Rúben Cardoso Faria':      { t:4, ta:4, f:3, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'tecnico', imed:3, mp:4, lp:4, contrato:2027, shadow:'MC',
-    estilo:'Médio de construção, bom primeiro passe e orientação de corpo. Intensidade sem bola a confirmar.' },
-  'Nuno Ferreira Lima':       { t:3, ta:3, f:3, m:4, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:3, lp:3, contrato:2027, shadow:'MDF',
-    estilo:'Médio equilibrador, lê bem os espaços. Mais seguro em posse curta do que em transição.' },
-  'Hélder Barbosa Melo':      { t:5, ta:4, f:4, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:5, lp:5, contrato:2027, shadow:'MOF',
-    estilo:'Médio ofensivo criativo, decide bem sob pressão. O melhor da lista no último passe.' },
-  'Francisco Nogueira Pinto': { t:5, ta:4, f:4, m:4, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'tecnico', imed:4, mp:4, lp:5, contrato:2028, shadow:'EE',
-    estilo:'Extremo esquerdo de 1x1, aceleração curta e remate de fora. Margem de evolução grande para a idade.' },
-  'João Resende Matos':       { t:3, ta:3, f:4, m:3, veredito:'Nova observação', rend:'R2', pot:'P2', perfil:'fisico',  imed:3, mp:3, lp:3, contrato:2026, shadow:'ED',
-    estilo:'Extremo direito de profundidade. Eficaz em campo aberto, menos útil contra bloco baixo.' },
-  'Pedro Alves Marques':      { t:4, ta:3, f:4, m:3, veredito:'A acompanhar',    rend:'R2', pot:'P2', perfil:'misto',   imed:3, mp:4, lp:4, contrato:2027, shadow:null,
-    estilo:'Ponta de lança de referência, protege bem a bola de costas. Alternativa ao perfil titular.' },
-  'Daniel Sousa Branco':      { t:4, ta:4, f:5, m:5, veredito:'Contratar',       rend:'R1', pot:'P1', perfil:'misto',   imed:4, mp:5, lp:5, contrato:2028, shadow:'PL',
-    estilo:'Avançado completo: ataca a profundidade e finaliza com os dois pés. Perfil mais pronto da lista.' },
-  'Vasco Correia Leal':       { t:4, ta:3, f:3, m:4, veredito:'A acompanhar',    rend:'R2', pot:'P1', perfil:'tecnico', imed:3, mp:4, lp:5, contrato:2029, shadow:null,
-    estilo:'Extremo canhoto a jogar invertido. Muito jovem; seguir ao longo da época.' },
-};
+// Nível médio ponderado das quatro dimensões-alvo, na mesma proporção que o
+// rating usa. Serve de base a tudo o que se deriva a seguir.
+const nivelMedio = (j) => (j.t * 0.2 + j.ta * 0.2 + j.f * 0.15 + j.m * 0.2) / 0.75;
+
+const idadeEm = (nasc) => Math.floor((Date.now() - new Date(nasc)) / 31557600000);
+
+// Rendimento, potencial, perfil e avaliação por horizonte derivam das notas e da
+// idade, em vez de serem escritos à mão. Assim não podem contradizer a grelha.
+function classificar(j) {
+  const n = nivelMedio(j);
+  const idade = idadeEm(j.nasc);
+  return {
+    idade,
+    rend: n >= 3.9 ? 'R1' : n >= 2.9 ? 'R2' : 'R3',
+    pot: n >= 3.9 ? 'P1' : n >= 2.9 ? (idade <= 20 ? 'P1' : 'P2') : 'P3',
+    perfil: j.t - j.f >= 1 ? 'tecnico' : j.f - j.t >= 1 ? 'fisico' : 'misto',
+    imed: limitar(n),
+    mp: limitar(n + (idade <= 21 ? 0.7 : 0)),
+    lp: limitar(n + (idade <= 18 ? 1.4 : idade <= 21 ? 0.9 : 0)),
+  };
+}
+
 
 // Jogos de onde saem as observações de exemplo.
 const JOGOS = [
@@ -115,22 +103,113 @@ function textoFortesFracos(pos, grelha) {
   };
 }
 
-// Jogadores de exemplo (fictícios) para arrancar a base com dados de demonstração.
-const jogadores = [
-  { nomeCompleto: 'Rafael Monteiro Dias', posicaoPrincipal: 'GR', dataNascimento: new Date('2005-02-11'), clubeAtual: 'Leixões SC', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Tomás Vieira Lopes', posicaoPrincipal: 'DD', posicoesSecundarias: ['DC'], dataNascimento: new Date('2006-09-03'), clubeAtual: 'FC Famalicão B', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Diogo Fonseca Ramos', posicaoPrincipal: 'DC', dataNascimento: new Date('2004-05-20'), clubeAtual: 'Académico de Viseu', liga: 'Liga Portugal 2', nacionalidade: 'Portugal', pePreferencial: 'Esquerdo' },
-  { nomeCompleto: 'Miguel Antunes Rocha', posicaoPrincipal: 'DC', dataNascimento: new Date('2007-01-14'), clubeAtual: 'Varzim SC', liga: 'Campeonato de Portugal', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'André Carvalho Pires', posicaoPrincipal: 'DE', posicoesSecundarias: ['EE'], dataNascimento: new Date('2008-07-22'), clubeAtual: 'Rio Ave B', liga: 'Juniores A (Sub-19)', nacionalidade: 'Portugal', pePreferencial: 'Esquerdo' },
-  { nomeCompleto: 'Gonçalo Teixeira Nunes', posicaoPrincipal: 'MDF', dataNascimento: new Date('2003-11-30'), clubeAtual: 'GD Chaves', liga: 'Liga Portugal 2', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Rúben Cardoso Faria', posicaoPrincipal: 'MC', dataNascimento: new Date('2006-03-18'), clubeAtual: 'Moreirense B', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Ambidestro' },
-  { nomeCompleto: 'Nuno Ferreira Lima', posicaoPrincipal: 'MC', posicoesSecundarias: ['MDF'], dataNascimento: new Date('2005-08-27'), clubeAtual: 'CD Tondela', liga: 'Liga Portugal 2', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Hélder Barbosa Melo', posicaoPrincipal: 'MOF', dataNascimento: new Date('2007-04-09'), clubeAtual: 'Vitória SC B', liga: 'Juniores A (Sub-19)', nacionalidade: 'Portugal', pePreferencial: 'Esquerdo' },
-  { nomeCompleto: 'Francisco Nogueira Pinto', posicaoPrincipal: 'EE', posicoesSecundarias: ['ED'], dataNascimento: new Date('2008-12-05'), clubeAtual: 'SC Braga B', liga: 'Juniores A (Sub-19)', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'João Resende Matos', posicaoPrincipal: 'ED', dataNascimento: new Date('2004-06-16'), clubeAtual: 'Casa Pia AC B', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Esquerdo' },
-  { nomeCompleto: 'Pedro Alves Marques', posicaoPrincipal: 'PL', dataNascimento: new Date('2006-10-01'), clubeAtual: 'Estrela da Amadora B', liga: 'Liga 3', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Daniel Sousa Branco', posicaoPrincipal: 'PL', posicoesSecundarias: ['MOF'], dataNascimento: new Date('2007-02-28'), clubeAtual: 'FC Alverca', liga: 'Campeonato de Portugal', nacionalidade: 'Portugal', pePreferencial: 'Direito' },
-  { nomeCompleto: 'Vasco Correia Leal', posicaoPrincipal: 'EE', dataNascimento: new Date('2009-05-12'), clubeAtual: 'Boavista FC Sub-19', liga: 'Juniores A (Sub-19)', nacionalidade: 'Portugal', pePreferencial: 'Esquerdo' },
+// Base de exemplo: 34 jogadores fictícios em clubes portugueses reais, cada um
+// com as notas-alvo das 4 dimensões (1-5, nível de liga) e o veredito do scout.
+// Tudo o resto — rendimento, potencial, perfil, horizontes, rating — é derivado.
+//   t = técnica · ta = tática · f = física · m = mental · obs = nº de observações
+const JOGADORES = [
+  { nome:'Rafael Monteiro Dias', pos:'GR', nasc:'2005-02-11', clube:'Leixões SC', liga:'Liga 3', pe:'Direito',
+    t:3, ta:3, f:3, m:3, veredito:'Nova observação', contrato:2027, shadow:'GR', obs:3,
+    estilo:'Guarda-redes de linha, seguro no jogo aéreo. Participação na construção ainda por avaliar com bola pressionada.' },
+  { nome:'Tomás Vieira Lopes', pos:'DD', sec:['DC'], nasc:'2006-09-03', clube:'FC Famalicão B', liga:'Liga 3', pe:'Direito',
+    t:3, ta:3, f:4, m:3, veredito:'Nova observação', contrato:2027, shadow:'DD', obs:2,
+    estilo:'Lateral de ida e volta, forte no apoio ofensivo. Decisão no último terço inconsistente.' },
+  { nome:'Diogo Fonseca Ramos', pos:'DC', nasc:'2004-05-20', clube:'Académico de Viseu', liga:'Liga Portugal 2', pe:'Esquerdo',
+    t:2, ta:3, f:3, m:2, veredito:'Não avança', contrato:2026, obs:3,
+    estilo:'Central de duelo, cumpre no corpo a corpo. Limitado na saída de bola para o modelo pretendido.' },
+  { nome:'Miguel Antunes Rocha', pos:'DC', nasc:'2007-01-14', clube:'Varzim SC', liga:'Campeonato de Portugal', pe:'Direito',
+    t:4, ta:3, f:4, m:3, veredito:'A acompanhar', contrato:2028, shadow:'DC', obs:2,
+    estilo:'Central esquerdo com saída de bola em condução. Boa leitura antecipada; por vezes precipitado a sair da linha.' },
+  { nome:'André Carvalho Pires', pos:'DE', sec:['EE'], nasc:'2008-07-22', clube:'Rio Ave B', liga:'Juniores A (Sub-19)', pe:'Esquerdo',
+    t:4, ta:3, f:3, m:4, veredito:'A acompanhar', contrato:2028, shadow:'DE', obs:3,
+    estilo:'Lateral esquerdo técnico, confortável a receber entre linhas. Deve crescer na fase defensiva.' },
+  { nome:'Gonçalo Teixeira Nunes', pos:'MDF', nasc:'2003-11-30', clube:'GD Chaves', liga:'Liga Portugal 2', pe:'Direito',
+    t:3, ta:2, f:3, m:2, veredito:'Não avança', contrato:2026, obs:2,
+    estilo:'Médio defensivo posicional. Ritmo de circulação abaixo do exigido; pouca margem pela idade.' },
+  { nome:'Rúben Cardoso Faria', pos:'MC', nasc:'2006-03-18', clube:'Moreirense B', liga:'Liga 3', pe:'Ambidestro',
+    t:4, ta:4, f:3, m:3, veredito:'A acompanhar', contrato:2027, shadow:'MC', obs:3,
+    estilo:'Médio de construção, bom primeiro passe e orientação de corpo. Intensidade sem bola a confirmar.' },
+  { nome:'Nuno Ferreira Lima', pos:'MC', sec:['MDF'], nasc:'2005-08-27', clube:'CD Tondela', liga:'Liga Portugal 2', pe:'Direito',
+    t:3, ta:3, f:3, m:4, veredito:'Nova observação', contrato:2027, shadow:'MDF', obs:2,
+    estilo:'Médio equilibrador, lê bem os espaços. Mais seguro em posse curta do que em transição.' },
+  { nome:'Hélder Barbosa Melo', pos:'MOF', nasc:'2007-04-09', clube:'Vitória SC B', liga:'Juniores A (Sub-19)', pe:'Esquerdo',
+    t:5, ta:4, f:4, m:5, veredito:'Contratar', contrato:2027, shadow:'MOF', obs:3,
+    estilo:'Médio ofensivo criativo, decide bem sob pressão. O melhor da lista no último passe.' },
+  { nome:'Francisco Nogueira Pinto', pos:'EE', sec:['ED'], nasc:'2008-12-05', clube:'SC Braga B', liga:'Juniores A (Sub-19)', pe:'Direito',
+    t:5, ta:4, f:4, m:4, veredito:'Contratar', contrato:2028, shadow:'EE', obs:2,
+    estilo:'Extremo esquerdo de um contra um, aceleração curta e remate de fora. Margem de evolução grande para a idade.' },
+  { nome:'João Resende Matos', pos:'ED', nasc:'2004-06-16', clube:'Casa Pia AC B', liga:'Liga 3', pe:'Esquerdo',
+    t:3, ta:3, f:4, m:3, veredito:'Nova observação', contrato:2026, shadow:'ED', obs:3,
+    estilo:'Extremo direito de profundidade. Eficaz em campo aberto, menos útil contra bloco baixo.' },
+  { nome:'Pedro Alves Marques', pos:'PL', nasc:'2006-10-01', clube:'Estrela da Amadora B', liga:'Liga 3', pe:'Direito',
+    t:4, ta:3, f:4, m:3, veredito:'A acompanhar', contrato:2027, obs:2,
+    estilo:'Ponta de lança de referência, protege bem a bola de costas. Alternativa ao perfil titular.' },
+  { nome:'Daniel Sousa Branco', pos:'PL', sec:['MOF'], nasc:'2007-02-28', clube:'FC Alverca', liga:'Campeonato de Portugal', pe:'Direito',
+    t:4, ta:4, f:5, m:5, veredito:'Contratar', contrato:2028, shadow:'PL', obs:3,
+    estilo:'Avançado completo: ataca a profundidade e finaliza com os dois pés. Perfil mais pronto da lista.' },
+  { nome:'Vasco Correia Leal', pos:'EE', nasc:'2009-05-12', clube:'Boavista FC Sub-19', liga:'Juniores A (Sub-19)', pe:'Esquerdo',
+    t:4, ta:3, f:3, m:4, veredito:'A acompanhar', contrato:2029, obs:2,
+    estilo:'Extremo canhoto a jogar invertido. Muito jovem; seguir ao longo da época.' },
+  { nome:'Tiago Moreira Antunes', pos:'GR', nasc:'2006-04-18', clube:'Académica de Coimbra', liga:'Liga 3', pe:'Direito',
+    t:3, ta:3, f:4, m:3, veredito:'Nova observação', contrato:2027, obs:4,
+    estilo:'Guarda-redes de reflexo, domina bem a pequena área. Jogo de pés limitado sob pressão alta.' },
+  { nome:'Bruno Loureiro Castro', pos:'DD', nasc:'2007-08-02', clube:'SC Farense B', liga:'Campeonato de Portugal', pe:'Direito',
+    t:3, ta:3, f:3, m:3, veredito:'Nova observação', contrato:2027, obs:5,
+    estilo:'Lateral direito equilibrado, sem ponto forte evidente. Cumpre em bloco médio.' },
+  { nome:'Afonso Neves Cardoso', pos:'DC', nasc:'2005-01-27', clube:'FC Vizela B', liga:'Liga 3', pe:'Direito',
+    t:3, ta:4, f:4, m:4, veredito:'A acompanhar', contrato:2027, obs:4,
+    estilo:'Central destro de bloco alto, agressivo a subir na linha. Boa comunicação com os laterais.' },
+  { nome:'Martim Oliveira Sá', pos:'DC', sec:['MDF'], nasc:'2008-03-11', clube:'AD Sanjoanense', liga:'Campeonato de Portugal', pe:'Esquerdo',
+    t:4, ta:4, f:4, m:4, veredito:'Contratar', contrato:2029, shadow:'DC', obs:5,
+    estilo:'Central canhoto com passe quebra-linhas. Perfil raro no mercado e encaixa no modelo de construção.' },
+  { nome:'Rodrigo Pinheiro Gomes', pos:'DE', nasc:'2006-11-23', clube:'Portimonense B', liga:'Liga 3', pe:'Esquerdo',
+    t:3, ta:3, f:4, m:3, veredito:'A acompanhar', contrato:2028, obs:4,
+    estilo:'Lateral esquerdo de repetição de corridas. Centro inconsistente, mas chega sempre à linha.' },
+  { nome:'Simão Duarte Freitas', pos:'MDF', nasc:'2004-02-09', clube:'Leça FC', liga:'Campeonato de Portugal', pe:'Direito',
+    t:2, ta:3, f:3, m:3, veredito:'Não avança', contrato:2026, obs:4,
+    estilo:'Médio de corte, útil sem bola. Primeiro passe curto demais para a saída pretendida.' },
+  { nome:'Henrique Barros Teixeira', pos:'MC', sec:['MOF'], nasc:'2007-06-30', clube:'FC Felgueiras 1932', liga:'Liga 3', pe:'Direito',
+    t:4, ta:4, f:3, m:4, veredito:'A acompanhar', contrato:2028, obs:5,
+    estilo:'Médio de meia-distância, chega bem à área à segunda bola. Volume de corrida a confirmar em 90 minutos.' },
+  { nome:'Leandro Martins Vaz', pos:'MC', nasc:'2005-09-14', clube:'SC Espinho', liga:'Campeonato de Portugal', pe:'Ambidestro',
+    t:3, ta:3, f:3, m:2, veredito:'Não avança', contrato:2026, obs:4,
+    estilo:'Médio ambidestro, tecnicamente correto. Quebra competitiva evidente na segunda parte.' },
+  { nome:'Guilherme Santos Abreu', pos:'MOF', sec:['EE'], nasc:'2008-05-07', clube:'FC Penafiel', liga:'Liga Portugal 2', pe:'Esquerdo',
+    t:4, ta:4, f:3, m:4, veredito:'A acompanhar', contrato:2029, obs:5,
+    estilo:'Médio ofensivo associativo, joga entre linhas com orientação de corpo aberta. Fisicamente ainda a formar-se.' },
+  { nome:'Dinis Ferreira Cunha', pos:'MOF', nasc:'2009-01-19', clube:'AVS Futebol SAD', liga:'Liga Portugal 2', pe:'Direito',
+    t:4, ta:3, f:3, m:4, veredito:'Nova observação', contrato:2029, obs:4,
+    estilo:'Muito jovem a competir em sénior. Lampejos de qualidade; falta constância nos 90 minutos.' },
+  { nome:'Salvador Reis Mendes', pos:'EE', sec:['PL'], nasc:'2007-10-05', clube:'UD Oliveirense', liga:'Liga 3', pe:'Direito',
+    t:4, ta:3, f:4, m:3, veredito:'A acompanhar', contrato:2028, obs:5,
+    estilo:'Extremo de impacto direto, procura sempre o duelo individual. Participação defensiva irregular.' },
+  { nome:'Lourenço Pacheco Nóbrega', pos:'ED', nasc:'2006-07-21', clube:'CD Nacional B', liga:'Campeonato de Portugal', pe:'Esquerdo',
+    t:3, ta:2, f:3, m:3, veredito:'Não avança', contrato:2026, obs:4,
+    estilo:'Extremo de drible repetido, perde demasiadas bolas em zonas de risco. Leitura tática curta.' },
+  { nome:'Rui Monteiro Craveiro', pos:'PL', nasc:'2005-12-03', clube:'CD Trofense', liga:'Campeonato de Portugal', pe:'Direito',
+    t:3, ta:3, f:4, m:3, veredito:'Nova observação', contrato:2027, obs:4,
+    estilo:'Avançado de área, vive de duelos e segundas bolas. Pouco participativo na construção.' },
+  { nome:'Gabriel Sousa Tavares', pos:'PL', sec:['EE'], nasc:'2008-09-26', clube:'Vilaverdense FC', liga:'Liga 3', pe:'Direito',
+    t:5, ta:4, f:4, m:4, veredito:'Contratar', contrato:2028, obs:5,
+    estilo:'Avançado móvel que parte da esquerda para dentro. Finalização limpa e sangue-frio na área.' },
+  { nome:'Eduardo Lima Pereira', pos:'DC', nasc:'2007-03-30', clube:'Amarante FC', liga:'Campeonato de Portugal', pe:'Direito',
+    t:2, ta:3, f:3, m:2, veredito:'Não avança', contrato:2026, obs:4,
+    estilo:'Central de porte, domina o jogo aéreo defensivo. Muito exposto em campo aberto.' },
+  { nome:'Mateus Correia Lobo', pos:'DD', sec:['ED'], nasc:'2008-11-08', clube:'Lusitânia de Lourosa', liga:'Campeonato de Portugal', pe:'Direito',
+    t:3, ta:3, f:3, m:3, veredito:'Nova observação', contrato:2028, obs:5,
+    estilo:'Lateral convertido de extremo, melhor com bola do que sem ela. Processo defensivo em construção.' },
+  { nome:'Samuel Azevedo Rocha', pos:'MC', nasc:'2009-04-02', clube:'SC Braga Sub-19', liga:'Juniores A (Sub-19)', pe:'Esquerdo',
+    t:4, ta:3, f:3, m:4, veredito:'A acompanhar', contrato:2029, obs:4,
+    estilo:'Médio canhoto de formação de elite. Toque e cadência acima da média do escalão.' },
+  { nome:'Ivo Carvalho Brandão', pos:'EE', nasc:'2009-08-17', clube:'Sporting CP Sub-19', liga:'Juniores A (Sub-19)', pe:'Direito',
+    t:4, ta:3, f:3, m:3, veredito:'Nova observação', contrato:2029, obs:5,
+    estilo:'Extremo explosivo em espaço curto. Decisão final ainda por amadurecer.' },
+  { nome:'Nelson Fonseca Dias', pos:'MDF', sec:['DC'], nasc:'2008-06-12', clube:'FC Porto Sub-19', liga:'Juniores A (Sub-19)', pe:'Direito',
+    t:3, ta:3, f:3, m:3, veredito:'Nova observação', contrato:2029, obs:4,
+    estilo:'Médio defensivo que também joga a central. Versatilidade é o principal argumento.' },
+  { nome:'Alexandre Pinto Gaspar', pos:'GR', nasc:'2009-02-24', clube:'SL Benfica Sub-19', liga:'Juniores A (Sub-19)', pe:'Direito',
+    t:3, ta:3, f:3, m:2, veredito:'Não avança', contrato:2029, obs:5,
+    estilo:'Guarda-redes de bom tamanho, mas inseguro nas saídas. Não reúne condições a curto prazo.' },
 ];
 
 async function run() {
@@ -146,33 +225,42 @@ async function run() {
     Agendamento.deleteMany({}),
   ]);
 
-  // Jogadores + uma observação cada, para a base abrir com ratings e vereditos
+  // Jogadores + as suas observações, para a base abrir com ratings e vereditos
   // calculados em vez de colunas vazias.
   let nObs = 0;
-  for (const [i, j] of jogadores.entries()) {
-    const p = await new Player(j).save(); // save() para disparar hooks
+  for (const [i, j] of JOGADORES.entries()) {
+    const d = classificar(j);
+    const pos = j.pos;
 
-    const d = PERFIS_DEMO[j.nomeCompleto];
-    if (!d) continue;
+    const p = await new Player({
+      nomeCompleto: j.nome,
+      posicaoPrincipal: pos,
+      posicoesSecundarias: j.sec || [],
+      dataNascimento: new Date(j.nasc),
+      clubeAtual: j.clube,
+      liga: j.liga,
+      nacionalidade: 'Portugal',
+      pePreferencial: j.pe,
+    }).save(); // save() para disparar hooks
 
-    const rnd = aleatorio(j.nomeCompleto);
-    const pos = j.posicaoPrincipal;
-    // Duas ou três observações por jogador, para a ficha ter histórico e o
-    // painel de consistência ter o que comparar.
-    const quantas = 2 + (i % 2);
+    const rnd = aleatorio(j.nome);
+    // Cada jogador tem o seu número de observações: uns foram vistos duas
+    // vezes, outros cinco. A ficha ganha histórico e o painel de consistência
+    // passa a ter o que comparar.
+    const quantas = j.obs;
     const ratings = [];
     let ultima = null;
 
     for (let n = 0; n < quantas; n += 1) {
       const jogo = JOGOS[(i + n) % JOGOS.length];
-      // A primeira observação é ligeiramente mais contida: o jogador ainda está
-      // a ser conhecido, e a avaliação converge com o número de jogos vistos.
-      const ajuste = n === 0 ? -0.4 : 0;
+      // As primeiras observações são mais contidas: o jogador ainda está a ser
+      // conhecido, e a avaliação converge à medida que se vêem mais jogos.
+      const ajuste = -0.5 * (1 - n / Math.max(1, quantas - 1));
       const alvos = {
-        tecnica: d.t + ajuste,
-        tatica: d.ta + ajuste,
-        fisica: d.f + ajuste,
-        mental: d.m + ajuste,
+        tecnica: j.t + ajuste,
+        tatica: j.ta + ajuste,
+        fisica: j.f + ajuste,
+        mental: j.m + ajuste,
       };
       const grelha = gerarGrelha(pos, alvos, rnd);
       const avaliacao = {
@@ -196,9 +284,9 @@ async function run() {
         grelhaPosicao: grelha,
         fortes,
         fracos,
-        estiloJogo: d.estilo,
-        notas: `Observado frente ao ${jogo.adversario}. ${ultimaDoJogador ? 'Confirma a leitura das observações anteriores.' : 'Primeira observação; a confirmar em contexto diferente.'}`,
-        veredito: ultimaDoJogador ? d.veredito : 'Nova observação',
+        estiloJogo: j.estilo,
+        notas: `Observado frente ao ${jogo.adversario}. ${ultimaDoJogador ? 'Confirma a leitura das observações anteriores.' : n === 0 ? 'Primeira observação; a confirmar em contexto diferente.' : 'Em linha com o que foi visto antes.'}`,
+        veredito: ultimaDoJogador ? j.veredito : 'Nova observação',
         rendimento: d.rend,
         potencialClass: d.pot,
       });
@@ -211,17 +299,17 @@ async function run() {
     // Espelha no jogador o que a rota /api/observations faria a seguir.
     p.avaliacao = ultima.avaliacao;
     p.ratingFinal = Math.round((ratings.reduce((s, r) => s + r, 0) / ratings.length) * 10) / 10;
-    p.veredito = d.veredito;
+    p.veredito = j.veredito;
     p.rendimento = d.rend;
     p.potencialClass = d.pot; // o pre-save limpa-o acima da idade máxima
     p.perfil = d.perfil;
     p.avaliacaoImediata = d.imed;
     p.avaliacaoMedioPrazo = d.mp;
     p.avaliacaoLongoPrazo = d.lp;
-    p.fimContrato = new Date(d.contrato, 5, 30); // 30 de junho do ano indicado
-    // Onze-sombra: um alvo por posição. Quem não avança fica de fora, e os
+    p.fimContrato = new Date(j.contrato, 5, 30); // 30 de junho do ano indicado
+    // Onze-sombra: um alvo por posição. Quem não avança fica de fora, e as
     // alternativas ficam sem casa atribuída, como aconteceria num clube.
-    p.shadowPos = d.shadow ? [d.shadow] : [];
+    p.shadowPos = j.shadow ? [j.shadow] : [];
     await p.save();
   }
 
@@ -236,7 +324,7 @@ async function run() {
   await u.save();
 
   console.log(
-    `[seed] Base limpa. ${jogadores.length} jogadores e ${nObs} observações de exemplo inseridos.`
+    `[seed] Base limpa. ${JOGADORES.length} jogadores e ${nObs} observações de exemplo inseridos.`
   );
   console.log(
     `[seed] Conta de demonstração ${nova ? 'criada' : 'atualizada'}: ` +
