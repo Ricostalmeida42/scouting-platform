@@ -83,7 +83,7 @@ export default function Arquivo() {
                       {j.foto ? (
                         <img className="jogador-thumb" src={j.foto} alt="" loading="lazy" />
                       ) : (
-                        <span className="jogador-thumb jogador-thumb--vazio" aria-hidden="true" />
+                        <span className="jogador-thumb jogador-thumb--vazio sem-foto" aria-hidden="true" />
                       )}
                       <strong>{j.nomeCompleto}</strong>
                     </div>

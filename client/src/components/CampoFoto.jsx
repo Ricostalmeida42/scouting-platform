@@ -60,7 +60,7 @@ export default function CampoFoto({ valor, onChange }) {
             onLoad={() => setUrlPartida(false)}
           />
         ) : (
-          <span>sem foto</span>
+          <span className="foto-previa__vazio sem-foto" aria-label="Sem fotografia" role="img" />
         )}
       </div>
       <div className="linha-acoes" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>

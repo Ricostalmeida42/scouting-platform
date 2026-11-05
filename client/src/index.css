@@ -13,6 +13,9 @@
   --preto-2: #171a20;
   --branco: #ffffff;
 
+  /* Silhueta de jogador sem foto (usada como máscara — ver .sem-foto). */
+  --silhueta: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12.4a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Zm0 1.8c-4.1 0-7.4 2.3-7.4 5.1V21h14.8v-1.7c0-2.8-3.3-5.1-7.4-5.1Z'/%3E%3C/svg%3E");
+
   --fundo: #f4f5f7;
   --superficie: #ffffff;
   --superficie-2: #e8ebf0;  /* cabeçalhos, hover, gutter */
@@ -2133,6 +2136,12 @@ tbody tr.clicavel:hover td {
   object-fit: cover;
 }
 
+/* Silhueta a preencher a pré-visualização quando ainda não há fotografia. */
+.foto-previa__vazio {
+  width: 100%;
+  height: 100%;
+}
+
 .foto-dica {
   color: var(--texto-suave);
   font-size: 11px;
@@ -2204,6 +2213,31 @@ tbody tr.clicavel:hover td {
 }
 .jogador-thumb--vazio {
   background: var(--fundo);
+}
+
+/* Silhueta para jogadores sem fotografia. Desenhada como MÁSCARA e não como
+   imagem, para herdar a cor do tema: a mesma marca serve o modo claro e o
+   escuro sem precisar de dois ficheiros. Fica num ::after para a miniatura
+   manter o seu fundo e contorno por baixo. */
+.sem-foto {
+  position: relative;
+  display: inline-block;
+}
+.sem-foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--texto-suave);
+  opacity: 0.38;
+  -webkit-mask-image: var(--silhueta);
+  mask-image: var(--silhueta);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center 88%;
+  mask-position: center 88%;
+  -webkit-mask-size: 76% auto;
+  mask-size: 76% auto;
+  pointer-events: none;
 }
 
 /* Coluna da foto na ficha: foto em cima, classificação R/P por baixo */

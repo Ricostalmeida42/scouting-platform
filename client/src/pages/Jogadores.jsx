@@ -365,7 +365,7 @@ export default function Jogadores({ plantel = false, rotaBase = '/jogadores' }) 
                         {j.foto ? (
                           <img className="jog-thumb-sm" src={j.foto} alt="" loading="lazy" />
                         ) : (
-                          <span className="jog-thumb-sm" aria-hidden="true" />
+                          <span className="jog-thumb-sm sem-foto" aria-hidden="true" />
                         )}
                         <span className="jog-nome-txt">{j.nomeCompleto}</span>
                       </span>

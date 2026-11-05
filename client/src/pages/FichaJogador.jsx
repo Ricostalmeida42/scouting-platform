@@ -276,8 +276,10 @@ export default function FichaJogador({ id: propId, aoMudar }) {
         <div className="ficha-topo">
           {(jogador.foto || !jogador.doPlantel) && (
             <div className="ficha-foto-col">
-              {jogador.foto && (
+              {jogador.foto ? (
                 <img className="ficha-foto" src={jogador.foto} alt={`Fotografia de ${jogador.nomeCompleto}`} />
+              ) : (
+                <span className="ficha-foto sem-foto" aria-hidden="true" />
               )}
               {!jogador.doPlantel && (
                 <BadgesRP rendimento={jogador.rendimento} potencial={jogador.potencialClass} grande />
