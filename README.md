@@ -23,8 +23,12 @@ spreadsheet; all data is entered manually by the user.
 npm run install:all                  # root + server + client
 cp server/.env.example server/.env   # then edit the values (see Configuration)
 cp client/.env.example client/.env   # optional (club name shown in the interface)
-npm run seed                         # optional: fills the database with example players
+npm run seed                         # example players + a demo account to log in with
 ```
+
+The whole platform is behind a login, so run the seed on a fresh install: it creates a
+demo editor account, **`demo` / `demo1234`**. It is there so the platform can be opened
+straight after install. Delete it or change the password before any real use.
 
 ## Daily use
 On Windows, **double-click `Scouting.bat`**. It builds the interface the first time,
@@ -72,6 +76,10 @@ The whole platform sits behind a login. Roles:
 - **editor** (scouting): full access, reads and changes everything.
 - **viewer**: read only; any change is blocked on the server, except suggestions.
 - **tecnico** (coaching staff): a subset of access; page-level access is configurable per account.
+
+`npm run seed` creates a demo editor account (`demo` / `demo1234`) so a fresh install can
+be opened immediately. It is for local use only: delete it or change its password before
+running this for real.
 
 Create or update accounts (passwords are always stored encrypted):
 ```bash

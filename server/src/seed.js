@@ -7,6 +7,12 @@ import League from './models/League.js';
 import Contact from './models/Contact.js';
 import Club from './models/Club.js';
 import Agendamento from './models/Agendamento.js';
+import User from './models/User.js';
+
+// Conta de demonstração, para a plataforma poder ser aberta logo após o seed.
+// Só para uso local: apaga-a ou troca a palavra-passe antes de usar a sério
+// (Definições → Gestor de contas, ou src/apagarUtilizador.js).
+const DEMO = { username: 'demo', password: 'demo1234', papel: 'editor', nome: 'Scout' };
 
 // Jogadores de exemplo (fictícios) para arrancar a base com dados de demonstração.
 const jogadores = [
@@ -43,7 +49,21 @@ async function run() {
     await new Player(j).save(); // save() para disparar hooks
   }
 
+  // Conta de demonstração (não mexe nas restantes contas que existam).
+  let u = await User.findOne({ username: DEMO.username });
+  const nova = !u;
+  if (!u) u = new User({ username: DEMO.username });
+  u.nome = DEMO.nome;
+  u.papel = DEMO.papel;
+  u.ativo = true;
+  await u.definirPassword(DEMO.password);
+  await u.save();
+
   console.log(`[seed] Base limpa. ${jogadores.length} jogadores de exemplo inseridos.`);
+  console.log(
+    `[seed] Conta de demonstração ${nova ? 'criada' : 'atualizada'}: ` +
+      `${DEMO.username} / ${DEMO.password} (${DEMO.papel}). Apaga-a antes de usar a sério.`
+  );
   await mongoose.disconnect();
 }
 
