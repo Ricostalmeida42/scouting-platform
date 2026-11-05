@@ -7,6 +7,7 @@ import League from './models/League.js';
 import Contact from './models/Contact.js';
 import Club from './models/Club.js';
 import Agendamento from './models/Agendamento.js';
+import CalendarioJogo from './models/CalendarioJogo.js';
 import User from './models/User.js';
 // O catálogo de atributos por posição vive no cliente e não tem dependências,
 // por isso serve de fonte única também para o seed.
@@ -212,6 +213,77 @@ const JOGADORES = [
     estilo:'Guarda-redes de bom tamanho, mas inseguro nas saídas. Não reúne condições a curto prazo.' },
 ];
 
+// ---------------------------------------------------------------------------
+// Agenda da semana
+//
+// A aba "Semana" (PlanoSemana) só desenha agendamentos que tenham `visionamento`
+// — a hora a que o SCOUT vê, não a hora do jogo. O bloco é colorido pelo `modo`
+// e a altura vem de `duracaoMin`. A semana é calculada em tempo de execução, para
+// que quem corra o seed daqui a um mês veja na mesma a semana dele preenchida.
+//
+//   dia 0 = segunda ... 6 = domingo · ver = hora de visionamento "HH:MM"
+//   antes = dias entre o jogo e o visionamento (0 = vê em direto, no próprio jogo)
+//   dia null = fica em "Por agendar", sem hora atribuída
+const DURACAO_MODO = { diferido: 75, em_direto: 105, ao_vivo: 240 };
+
+const AGENDA = [
+  { dia:0, ver:'10:00', modo:'diferido',  estado:'Concluído', antes:2, jogador:'Tomás Vieira Lopes',
+    casa:'FC Famalicão B', fora:'Vilaverdense FC', competicao:'Liga 3', serie:'Série A', jornada:9, local:'Casa' },
+  { dia:0, ver:'20:30', modo:'diferido',  estado:'Concluído', antes:1, jogador:'Rafael Monteiro Dias',
+    casa:'Leixões SC', fora:'UD Oliveirense', competicao:'Liga 3', serie:'Série A', jornada:9, local:'Casa' },
+  { dia:1, ver:'21:00', modo:'diferido',  estado:'Concluído', antes:3, jogador:'Afonso Neves Cardoso',
+    casa:'FC Vizela B', fora:'Portimonense B', competicao:'Liga 3', serie:'Série B', jornada:9, local:'Casa' },
+  { dia:2, ver:'09:30', modo:'diferido',  estado:'Concluído', antes:2, jogador:'Martim Oliveira Sá',
+    casa:'AD Sanjoanense', fora:'Leça FC', competicao:'Campeonato de Portugal', serie:'Série A', jornada:10, local:'Casa' },
+  { dia:2, ver:'19:30', modo:'em_direto', estado:'Concluído', antes:0, jogador:'Hélder Barbosa Melo',
+    casa:'Vitória SC B', fora:'SC Braga B', competicao:'Juniores A (Sub-19)', serie:'Série Norte', jornada:10, local:'Casa' },
+  { dia:3, ver:'18:00', modo:'diferido',  estado:'Planeado',  antes:3, jogador:'Guilherme Santos Abreu',
+    casa:'FC Penafiel', fora:'AVS Futebol SAD', competicao:'Liga Portugal 2', serie:'', jornada:11, local:'Casa' },
+  { dia:3, ver:'21:00', modo:'diferido',  estado:'Planeado',  antes:4, jogador:'Henrique Barros Teixeira',
+    casa:'FC Felgueiras 1932', fora:'Moreirense B', competicao:'Liga 3', serie:'Série A', jornada:9, local:'Casa' },
+  { dia:4, ver:'20:00', modo:'em_direto', estado:'Planeado',  antes:0, jogador:'Daniel Sousa Branco',
+    casa:'FC Alverca', fora:'Amarante FC', competicao:'Campeonato de Portugal', serie:'Série C', jornada:11, local:'Casa' },
+  { dia:5, ver:'11:00', modo:'diferido',  estado:'Planeado',  antes:6, jogador:'Samuel Azevedo Rocha',
+    casa:'SC Braga Sub-19', fora:'Sporting CP Sub-19', competicao:'Juniores A (Sub-19)', serie:'Série Norte', jornada:10, local:'Casa' },
+  { dia:5, ver:'15:00', modo:'ao_vivo',   estado:'Planeado',  antes:0, jogador:'Francisco Nogueira Pinto',
+    casa:'SC Braga B', fora:'Rio Ave B', competicao:'Juniores A (Sub-19)', serie:'Série Norte', jornada:11, local:'Casa' },
+  { dia:6, ver:'14:00', modo:'ao_vivo',   estado:'Planeado',  antes:0, jogador:'Gabriel Sousa Tavares',
+    casa:'Vilaverdense FC', fora:'Académica de Coimbra', competicao:'Liga 3', serie:'Série A', jornada:10, local:'Casa' },
+  { dia:6, ver:'19:30', modo:'diferido',  estado:'Planeado',  antes:1, jogador:'Rui Monteiro Craveiro',
+    casa:'CD Trofense', fora:'Lusitânia de Lourosa', competicao:'Campeonato de Portugal', serie:'Série A', jornada:11, local:'Casa' },
+
+  // Sem hora marcada: ficam no separador "Por agendar", à espera de serem
+  // arrastados para o horário. jogoEm = dias desde a segunda desta semana.
+  { dia:null, jogoEm:11, jogador:'Salvador Reis Mendes',
+    casa:'UD Oliveirense', fora:'CD Nacional B', competicao:'Liga 3', serie:'Série B', jornada:10, local:'Casa' },
+  { dia:null, jogoEm:12, jogador:'Dinis Ferreira Cunha',
+    casa:'AVS Futebol SAD', fora:'GD Chaves', competicao:'Liga Portugal 2', serie:'', jornada:12, local:'Casa' },
+  { dia:null, jogoEm:13, jogador:'Ivo Carvalho Brandão',
+    casa:'Sporting CP Sub-19', fora:'FC Porto Sub-19', competicao:'Juniores A (Sub-19)', serie:'Série Sul', jornada:11, local:'Casa' },
+];
+
+// Segunda-feira da semana corrente, às 00:00 locais.
+function segundaDestaSemana() {
+  const hoje = new Date();
+  const seg = new Date(hoje);
+  seg.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
+  seg.setHours(0, 0, 0, 0);
+  return seg;
+}
+
+// Data local a partir da segunda-feira + dias + "HH:MM".
+function noDia(segunda, dias, hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date(segunda);
+  d.setDate(segunda.getDate() + dias);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+// O calendário guarda a data do jogo ao meio-dia UTC, por convenção da rota de
+// importação, para não haver saltos de dia por causa do fuso.
+const diaUtc = (d) => new Date(`${d.toISOString().slice(0, 10)}T12:00:00Z`);
+
 async function run() {
   await connectDB(process.env.MONGODB_URI);
 
@@ -223,11 +295,13 @@ async function run() {
     Contact.deleteMany({}),
     Club.deleteMany({}),
     Agendamento.deleteMany({}),
+    CalendarioJogo.deleteMany({}),
   ]);
 
   // Jogadores + as suas observações, para a base abrir com ratings e vereditos
   // calculados em vez de colunas vazias.
   let nObs = 0;
+  const idPorNome = {};
   for (const [i, j] of JOGADORES.entries()) {
     const d = classificar(j);
     const pos = j.pos;
@@ -311,6 +385,46 @@ async function run() {
     // alternativas ficam sem casa atribuída, como aconteceria num clube.
     p.shadowPos = j.shadow ? [j.shadow] : [];
     await p.save();
+    idPorNome[j.nome] = p._id;
+  }
+
+  // Calendário + agenda da semana corrente.
+  const segunda = segundaDestaSemana();
+  let nAg = 0;
+  for (const a of AGENDA) {
+    const agendado = a.dia != null;
+    const horaJogo = agendado && a.antes === 0 ? a.ver : '15:00';
+    const diaJogo = agendado ? a.dia - a.antes : a.jogoEm;
+    const dataJogo = noDia(segunda, diaJogo, horaJogo);
+
+    const jogo = await CalendarioJogo.create({
+      competicao: a.competicao,
+      epoca: '2026/27',
+      serie: a.serie,
+      jornada: a.jornada,
+      data: diaUtc(dataJogo),
+      hora: horaJogo,
+      casa: a.casa,
+      fora: a.fora,
+    });
+
+    await Agendamento.create({
+      jogador: idPorNome[a.jogador] || null,
+      calendarioJogo: jogo._id,
+      dataJogo,
+      hora: horaJogo,
+      // Sem visionamento, o bloco não é desenhado: fica em "Por agendar".
+      visionamento: agendado ? noDia(segunda, a.dia, a.ver) : null,
+      modo: a.modo || 'diferido',
+      duracaoMin: DURACAO_MODO[a.modo] || DURACAO_MODO.diferido,
+      competicao: a.competicao,
+      // O botão de marcar visto parte este campo por " x ", por isso o formato importa.
+      adversario: `${a.casa} x ${a.fora}`,
+      local: a.local || null,
+      estado: a.estado || 'Planeado',
+      notas: agendado ? '' : 'Por marcar hora de visionamento.',
+    });
+    nAg += 1;
   }
 
   // Conta de demonstração (não mexe nas restantes contas que existam).
@@ -324,7 +438,7 @@ async function run() {
   await u.save();
 
   console.log(
-    `[seed] Base limpa. ${JOGADORES.length} jogadores e ${nObs} observações de exemplo inseridos.`
+    `[seed] Base limpa. ${JOGADORES.length} jogadores, ${nObs} observações e ${nAg} agendamentos inseridos.`
   );
   console.log(
     `[seed] Conta de demonstração ${nova ? 'criada' : 'atualizada'}: ` +
