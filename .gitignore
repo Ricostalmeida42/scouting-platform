@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+.DS_Store
+
+# build da interface (gerado)
+client/dist/
+
+# cópias de segurança automáticas
+server/backups/
+server/comportamental-arquivado.json
+
+# ficheiro de contas/palavras-passe (privado)
+contas.txt
+
+# copias de seguranca com dados reais de jogadores (nunca versionar)
+/backups/
+
+# ficheiro vazio sem uso
+/Para
