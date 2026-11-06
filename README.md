@@ -2,11 +2,35 @@
 
 A local web application (MERN) for running a football club's scouting department: player
 database, match observations, attribute-grid evaluation, recruitment with a shadow team,
-squad planning, fixtures and competitions, and printable reports. It replaces the
-spreadsheet; all data is entered manually by the user.
+squad planning, fixtures and competitions, and printable reports. All data is entered
+manually by the user.
 
-> The club name is **configurable** (see *Configuration*): this is a generic platform,
-> reusable by any club.
+> The club name is **configurable** (see *Configuration*), so nothing here is tied to one
+> club's name — but see *Project status* below before considering using it.
+
+## Project status
+
+This is a working tool, used daily by one person — its author — in one club. It is
+published so that the approach and the code can be read, **not** as software that is ready
+to be installed and used by someone else.
+
+Concretely, before anyone considers running it:
+
+- **One club, one dataset.** A single MongoDB database and a single club, set by
+  environment variable. There is no separation between clubs or between users' data.
+- **Built around one workflow.** Positions, the four evaluation dimensions and the 1–5
+  league-level scale are fixed in the code. The attribute grid inside them is configurable;
+  the structure above them is not.
+- **Local only.** It runs on `localhost` over plain HTTP. No hosting, no HTTPS, and no
+  backup automation beyond a manual script.
+- **No migration path.** There is no way to import an existing player database.
+- **Portuguese interface**, with no translation layer.
+- **One user means untested paths.** Any bug someone else hits will be a new one.
+- **No licence.** This repository contains no LICENSE file, so no permission to use, copy
+  or modify the code is granted. Ask first.
+
+Reading the code, the evaluation model or the attribute grid, and arguing with any of it,
+is welcome — open an issue.
 
 ## Stack
 - **MongoDB** 8.x (local, `localhost:27017`, database `scouting`)
@@ -23,8 +47,12 @@ spreadsheet; all data is entered manually by the user.
 npm run install:all                  # root + server + client
 cp server/.env.example server/.env   # then edit the values (see Configuration)
 cp client/.env.example client/.env   # optional (club name shown in the interface)
+npm run build                        # required: the built interface is not in the repo
 npm run seed                         # example players + a demo account to log in with
 ```
+
+`npm run build` is not optional on a fresh clone: `client/dist/` is not versioned, so
+without it `npm start` serves the API with no interface behind it.
 
 The whole platform is behind a login, so run the seed on a fresh install: it creates a
 demo editor account, **`demo` / `demo1234`**. It is there so the platform can be opened
@@ -36,7 +64,7 @@ starts the server and opens the browser. Close the window to stop it.
 
 Command line equivalent:
 ```bash
-npm run build   # only after changing client code
+npm run build   # on a fresh clone, and after changing client code
 npm start       # runs on http://localhost:4000
 ```
 In production the server serves both the interface and the API **on the same port**, as a
